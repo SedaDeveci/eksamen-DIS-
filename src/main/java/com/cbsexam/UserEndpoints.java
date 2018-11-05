@@ -4,11 +4,7 @@ import cache.UserCache;
 import com.google.gson.Gson;
 import controllers.UserController;
 import java.util.ArrayList;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import model.User;
@@ -97,10 +93,33 @@ public class UserEndpoints {
     return Response.status(400).entity("Endpoint not implemented yet").build();
   }
 
-  // TODO: Make the system able to update users
-  public Response updateUser(String x) {
+  // TODO: Make the system able to update users (FIX)
 
-    // Return a response with status 200 and JSON as type
-    return Response.status(400).entity("Endpoint not implemented yet").build();
-  }
+  @PUT
+  @Path("/{idUser}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response updateUser(String body) {
+
+    User userNumberOne = new Gson ().fromJson(body, User.class);
+
+    User userNumberTwo = UserController.updateUser(userNumberOne);
+
+    String json = new Gson().toJson(userNumberOne);
+
+    if (userNumberOne != null)  {
+
+    // return a response with status 200 and Json as type
+
+      return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
+
+  }     else {
+      return Response.status(400).entity("Could not update user").build();
+    }
+
+    }
+
+
+
+
+
 }
