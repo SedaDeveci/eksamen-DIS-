@@ -87,10 +87,29 @@ public class UserEndpoints {
   }
 
   // TODO: Make the system able to delete users
-  public Response deleteUser(String x) {
+    @DELETE
+    @Path("/{idUser}")
+    @Consumes (MediaType.APPLICATION_JSON)
+    
+  public Response deleteUser(String body) {
+
+    User userNumberOne = new Gson ().fromJson(body,User.class );
+
+    User userNumberTwo = UserController.deleteUser(userNumberOne);
+
+    String json = new Gson ().toJson(userNumberTwo);
+
+    if(userNumberTwo != null) {
+       // return a response with status 200 and JSON as type
+
+        return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
+    } else   {
+          return Response.status(400).entity("could not delete  user").build() ;
+    }
 
     // Return a response with status 200 and JSON as type
-    return Response.status(400).entity("Endpoint not implemented yet").build();
+
+
   }
 
   // TODO: Make the system able to update users (FIX)
@@ -104,19 +123,18 @@ public class UserEndpoints {
 
     User userNumberTwo = UserController.updateUser(userNumberOne);
 
-    String json = new Gson().toJson(userNumberOne);
+    String json = new Gson().toJson(userNumberTwo);
 
     if (userNumberOne != null)  {
 
     // return a response with status 200 and Json as type
+    return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
 
-      return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
-
-  }     else {
+    } else {
       return Response.status(400).entity("Could not update user").build();
     }
 
-    }
+  }
 
 
 
