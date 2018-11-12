@@ -4,9 +4,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+
+import com.auth0.jwt.JWT;
 import model.User;
 import utils.Hashing;
 import utils.Log;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 
 public class UserController {
 
@@ -180,4 +184,54 @@ public class UserController {
     }
      return user;
   }
+
+
+public static String loginUser (User user){
+  if (dbCon==null){
+    dbCon = new DatabaseController();
+  }
+  ResultSet rs;
+  User userLogin;
+  String token = null;
+
+try {
+  PreparedStatement loginUser = dbCon.getConnection().prepareStatement("SELECT * FROM user WHERE email=? AND" +
+ "password=?") ;
+
+  loginUser.setString(1, user.getEmail());
+  loginUser.setString(2, Hashing.addsaltSha(user.getPassword()));
+
+  rs = loginUser.executeQuery();
+
+  if (rs.next()) {
+    userLogin = new User(
+            rs.getInt("id"),
+            rs.getString("first_name"),
+            rs.getString("last_name"),
+            rs.getString("password"),
+            rs.getString("email"));
+
+    if (userLogin !=null){
+      try {
+        Algorithm algorithm = Algorithm.HMAC256("secret");
+        token = JWT.create()
+                .withClaim("userID", user.getId())
+                .withIssuer("auth0")
+                .sign(algorithm);
+
+      }catch (JWTCreationException ex){
+
+      }finally {
+        return token;
+      }
+
+    }
+  }else {
+    System.out.println("User not find");
+  }
+}catch (SQLException ex){
+  ex.printStackTrace();
+}
+  return "";
+}
 }
