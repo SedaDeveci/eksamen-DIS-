@@ -2,6 +2,7 @@ package controllers;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import model.Address;
 import model.LineItem;
@@ -129,11 +130,25 @@ public class OrderController {
     }
 
     // Save addresses to database and save them back to initial order instance
-    order.setBillingAddress(AddressController.createAddress(order.getBillingAddress()));
-    order.setShippingAddress(AddressController.createAddress(order.getShippingAddress()));
+    Address billingAddress = AddressController.createAddress(order.getBillingAddress());
+    if(billingAddress==null){
+      return null;
+    }
+    order.setBillingAddress(billingAddress);
 
-    // Save the user to the database and save them back to initial order instance
-    order.setCustomer(UserController.createUser(order.getCustomer()));
+    Address shippingAdress = AddressController.createAddress(order.getShippingAddress());
+    if(shippingAdress== null){
+      return null;
+    }
+
+    order.setShippingAddress(shippingAdress);
+
+    User costumer = UserController.createUser(order.getCustomer());
+    if (costumer == null) {
+      return null;
+    }
+
+    order.setCustomer(costumer);
 
     // TODO: Enable transactions in order for us to not save the order if somethings fails for some of the other inserts.
 
