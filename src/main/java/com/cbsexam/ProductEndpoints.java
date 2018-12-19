@@ -35,14 +35,15 @@ public class ProductEndpoints {
     return Response.status(200).type(MediaType.TEXT_PLAIN_TYPE).entity(json).build();
   }
 
+
+
   /** @return Responses */
+  public static ProductCache productCache = new ProductCache();
   @GET
   @Path("/")
   public Response getProducts() {
 
     // Call our controller-layer in order to get the order from the DB
-
-    ProductCache productCache = new ProductCache();
     ArrayList<Product> products = productCache.getProducts(false);
 
     // TODO: Add Encryption to JSON

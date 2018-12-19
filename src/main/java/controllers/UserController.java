@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import model.User;
 import utils.Hashing;
 import utils.Log;
@@ -43,7 +45,8 @@ public class UserController {
                 rs.getString("first_name"),
                 rs.getString("last_name"),
                 rs.getString("password"),
-                rs.getString("email"));
+                rs.getString("email"),
+                rs.getLong("created_at"));
 
         // return the create object
         return user;
@@ -86,7 +89,8 @@ public class UserController {
                 rs.getString("first_name"),
                 rs.getString("last_name"),
                 rs.getString("password"),
-                rs.getString("email"));
+                rs.getString("email"),
+                rs.getLong("created_at"));
 
         // Add element to list
         users.add(user);
@@ -141,49 +145,76 @@ public class UserController {
     // Return user
     return user;
   }
-  public static User updateUser(User user) {
+  public static Boolean updateUser(User user , String token) {
 
-    if (dbCon == null) {
-      dbCon = new DatabaseController();
-    }
-
-    try{
-      PreparedStatement updateUser = dbCon.getConnection().prepareStatement("UPDATE user SET " +
-              "first_name = ?, last_name = ?, password = ?, email = ? WHERE id=? ");
-
-      updateUser.setString(1, user.getFirstname());
-      updateUser.setString(2, user.getLastname());
-      updateUser.setString(3, user.getPassword());
-      updateUser.setString(4, user.getEmail());
-      updateUser.setInt(5, user.getId());
-
-      updateUser.executeUpdate();
-
-    } catch (SQLException sql){
-      sql.printStackTrace();;
-    }
-
-
-    return user;
-  }
-
-  public static User deleteUser (User user) {
     if (dbCon == null) {
       dbCon = new DatabaseController();
     }
 
     try {
-             PreparedStatement deleteUser = dbCon.getConnection().prepareStatement("DELETE FROM user Where id = ? ")  ;
+      DecodedJWT jwt = JWT.decode(token);
+      int id = jwt.getClaim("userID").asInt();
 
-             deleteUser.setInt(1, user.getId());
+      try {
+        PreparedStatement updateUser = dbCon.getConnection().prepareStatement("UPDATE user SET " +
+                "first_name = ?, last_name = ?, password = ?, email = ? WHERE id=? ");
 
-             deleteUser.executeUpdate();
+        updateUser.setString(1, user.getFirstname());
+        updateUser.setString(2, user.getLastname());
+        updateUser.setString(3, user.getPassword());
+        updateUser.setString(4, user.getEmail());
+        updateUser.setInt(5, id);
 
-    }  catch   (SQLException ex)  {
+        int rowsAffected = updateUser.executeUpdate();
+
+        if (rowsAffected == 1) {
+          return true;
+        }
+
+      } catch (SQLException sql) {
+        sql.printStackTrace();
+        ;
+      }
+
+    } catch (JWTDecodeException ex)     {
       ex.printStackTrace();
     }
-     return user;
+
+    return false;
   }
+
+  public static boolean deleteUser (String token) {
+    if (dbCon == null) {
+      dbCon = new DatabaseController();
+    }
+
+    try {
+      DecodedJWT jwt = JWT.decode(token);
+      int id = jwt.getClaim("userID").asInt();
+
+
+      try {
+        PreparedStatement deleteUser = dbCon.getConnection().prepareStatement("DELETE FROM user WHERE id = ? ");
+
+        deleteUser.setInt(1, id);
+
+        int rowsAffected = deleteUser.executeUpdate();
+
+        if(rowsAffected == 1) {
+            return true;
+        }
+
+      } catch (SQLException sql) {
+        sql.printStackTrace();
+      }
+
+    }catch (JWTDecodeException ex) {
+       ex.printStackTrace();
+    }
+     return false;
+
+    }
+
 
 
 public static String loginUser (User user){
@@ -195,8 +226,7 @@ public static String loginUser (User user){
   String token = null;
 
 try {
-  PreparedStatement loginUser = dbCon.getConnection().prepareStatement("SELECT * FROM user WHERE email=? AND" +
- "password=?") ;
+  PreparedStatement loginUser = dbCon.getConnection().prepareStatement("SELECT * FROM user WHERE email= ? AND password= ?") ;
 
   loginUser.setString(1, user.getEmail());
   loginUser.setString(2, Hashing.addsaltSha(user.getPassword()));
@@ -215,10 +245,9 @@ try {
       try {
         Algorithm algorithm = Algorithm.HMAC256("secret");
         token = JWT.create()
-                .withClaim("userID", user.getId())
+                .withClaim("userID", userLogin.getId())
                 .withIssuer("auth0")
                 .sign(algorithm);
-
       }catch (JWTCreationException ex){
 
       }finally {

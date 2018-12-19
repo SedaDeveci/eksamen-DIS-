@@ -28,7 +28,7 @@ public final class Config {
     return PRODUCT_TTL;
   }
 
-  public static String getKEY() {return getKEY();}
+  public static String getKEY() {return KEY;}
 
   public static long getUserTtl() {
     return  USER_TTL;

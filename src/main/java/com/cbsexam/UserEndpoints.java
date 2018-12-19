@@ -8,6 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import model.User;
+import utils.Encryption;
 import utils.Log;
 
 @Path("user")
@@ -43,6 +44,7 @@ public class UserEndpoints {
     
 
   /** @return Responses */
+  public static UserCache userCache = new UserCache();
   @GET
   @Path("/")
   public Response getUsers() {
@@ -51,12 +53,13 @@ public class UserEndpoints {
     Log.writeLog(this.getClass().getName(), this, "Get all users", 0);
 
     // Get a list of users
-    UserCache userCache = new UserCache();
     ArrayList<User> users = userCache.getUser(false);
 
-    // TODO: Add Encryption to JSON
+    // TODO: Add Encryption to JSON (FIX)
     // Transfer users to json in order to return it to the user
     String json = new Gson().toJson(users);
+
+    json = Encryption.encryptDecryptXOR(json);
 
     // Return the users with the status code 200
     return Response.status(200).type(MediaType.APPLICATION_JSON).entity(json).build();
@@ -107,57 +110,47 @@ public class UserEndpoints {
   }
 
   // TODO: Make the system able to delete users
-    @DELETE
-    @Path("/{idUser}")
-    @Consumes (MediaType.APPLICATION_JSON)
+  @DELETE
+  @Path("/{token}")
+  @Consumes (MediaType.APPLICATION_JSON)
+  public Response deleteUser(@PathParam("token") String token)  {
     
-  public Response deleteUser(String body) {
 
-    User userNumberOne = new Gson ().fromJson(body,User.class );
+  Boolean deleted = UserController.deleteUser(token);
 
-    User userNumberTwo = UserController.deleteUser(userNumberOne);
-
-    String json = new Gson ().toJson(userNumberTwo);
-
-    if(userNumberTwo != null) {
+    if(deleted) {
        // return a response with status 200 and JSON as type
 
-        return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
+      return Response.status(200).entity("User is deleted").build();
     } else   {
           return Response.status(400).entity("could not delete  user").build() ;
     }
 
     // Return a response with status 200 and JSON as type
 
-
   }
 
   // TODO: Make the system able to update users (FIX)
 
   @PUT
-  @Path("/{idUser}")
+  @Path("/{idUser}/{token}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response updateUser(String body) {
+  public Response updateUser(@PathParam("token") String token , String body) {
 
-    User userNumberOne = new Gson ().fromJson(body, User.class);
+    User user1 = new Gson ().fromJson(body, User.class);
 
-    User userNumberTwo = UserController.updateUser(userNumberOne);
+    Boolean updated = UserController.updateUser(user1 , token);
 
-    String json = new Gson().toJson(userNumberTwo);
-
-    if (userNumberOne != null)  {
+    if (updated)  {
 
     // return a response with status 200 and Json as type
-    return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity(json).build();
+    return Response.status(200).type(MediaType.APPLICATION_JSON_TYPE).entity("the user has now been succesfully updated").build();
 
     } else {
       return Response.status(400).entity("Could not update user").build();
     }
 
   }
-
-
-
 
 
 }
