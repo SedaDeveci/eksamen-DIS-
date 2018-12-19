@@ -15,6 +15,22 @@ public final class Encryption {
       StringBuilder thisIsEncrypted = new StringBuilder();
 
       // TODO: This is where the magic of XOR is happening. Are you able to explain what is going on?
+      /**
+       *
+
+       -	Det er først år rawstring ikke indeholder flere karaktere at for-loopet forstætter med at køre
+       -	Der sker en omdannelse af karakteren, der er placeret på i’ ets plads i charArray.
+       -    Den omdannes til en binære værdi ved at bruge  følgende ”^”.
+       -	Som det kan ses i koden bruges XOR vil at lægge begge binære værdier sammen
+       -    og derfor sker der det at en ny binær værdi, som bliver omdannet til en char.
+       -    Det er i ThisIsEncrypted at denne char værdi tilføjes og den tilføjes ved at anvende følgende : thisIsEncrypted.append
+       -	”%” er brugt til at starte charArray igen i tilfælde af at man er nået til endelsen af charArray.
+       -    Dog starter charArray kun igen hvis rawString længden er større end CharArray keys længde.
+
+
+
+
+       */
       for (int i = 0; i < rawString.length(); i++) {
         thisIsEncrypted.append((char) (rawString.charAt(i) ^ key[i % key.length]));
       }
